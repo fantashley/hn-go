@@ -35,12 +35,21 @@ const (
 	ItemTypePollOpt = "pollopt"
 )
 
-type Story Item
-type Comment Item
-type Ask Item
-type Job Item
-type Poll Item
-type PollOpt Item
+type StorySortBy string
+
+const (
+	StorySortByNew  = "new"
+	StorySortByTop  = "top"
+	StorySortByBest = "best"
+)
+
+type StoryFilter string
+
+const (
+	StoryFilterAsk  = "ask"
+	StoryFilterShow = "show"
+	StoryFilterJob  = "job"
+)
 
 func (i *Item) UnmarshalJSON(data []byte) error {
 	type Alias Item

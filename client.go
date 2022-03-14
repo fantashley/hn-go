@@ -7,12 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
-)
-
-const (
-	apiPathItem = "item"
-	apiPathUser = "user"
 )
 
 const defaultBaseURL = "https://hacker-news.firebaseio.com/v0"
@@ -33,38 +27,6 @@ func NewClient(baseURL string, httpClient *http.Client) *Client {
 		baseURL:    baseURL,
 		httpClient: httpClient,
 	}
-}
-
-func (c *Client) GetUser(ctx context.Context, id string) (User, error) {
-	var (
-		user User
-		path = path.Join(apiPathUser, id+".json")
-	)
-
-	code, err := c.do(ctx, path, &user)
-	if err != nil {
-		return User{}, fmt.Errorf("error getting user %q: %w", id, err)
-	} else if code != http.StatusOK {
-		return User{}, fmt.Errorf("unexpected status code %d", code)
-	}
-
-	return user, nil
-}
-
-func (c *Client) GetItem(ctx context.Context, id uint64) (Item, error) {
-	var (
-		item Item
-		path = path.Join(apiPathItem, strconv.FormatUint(id, 10)+".json")
-	)
-
-	code, err := c.do(ctx, path, &item)
-	if err != nil {
-		return Item{}, fmt.Errorf("error getting item %d: %w", id, err)
-	} else if code != http.StatusOK {
-		return Item{}, fmt.Errorf("unexpected status code %d", code)
-	}
-
-	return item, nil
 }
 
 func (c *Client) do(ctx context.Context, reqPath string, data interface{}) (int, error) {
@@ -90,4 +52,36 @@ func (c *Client) do(ctx context.Context, reqPath string, data interface{}) (int,
 	}
 
 	return rep.StatusCode, nil
+}
+
+func (c *Client) sortedStories(ctx context.Context, sort StorySortBy) ([]Item, error) {
+	var (
+		stories = make([]uint64, 0, 500)
+		path    = string(sort) + "stories.json"
+	)
+
+	code, err := c.do(ctx, path, &stories)
+	if err != nil {
+		return nil, fmt.Errorf("error getting %s stories: %w", sort, err)
+	} else if code != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code %d", code)
+	}
+
+	return c.GetItems(ctx, stories)
+}
+
+func (c *Client) filteredStories(ctx context.Context, filter StoryFilter) ([]Item, error) {
+	var (
+		stories = make([]uint64, 0, 200)
+		path    = string(filter) + "stories.json"
+	)
+
+	code, err := c.do(ctx, path, &stories)
+	if err != nil {
+		return nil, fmt.Errorf("error getting latest stories of type %q: %w", filter, err)
+	} else if code != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status code %d", code)
+	}
+
+	return c.GetItems(ctx, stories)
 }

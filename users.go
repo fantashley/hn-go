@@ -10,7 +10,7 @@ type User struct {
 	ID            string    `json:"id"`
 	Created       int64     `json:"created"`
 	ParsedCreated time.Time `json:"-"`
-	Karma         uint32    `json:"karma"`
+	Karma         int32     `json:"karma"`
 	About         string    `json:"about,omitempty"`
 	Submitted     []uint64  `json:"submitted,omitempty"`
 }
